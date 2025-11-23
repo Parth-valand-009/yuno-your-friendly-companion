@@ -8,81 +8,92 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 28 60% 98%;
-    --foreground: 20 12% 25%;
+    /* Soft pastel backgrounds */
+    --background: 270 45% 97%;
+    --foreground: 260 15% 30%;
 
     --card: 0 0% 100%;
-    --card-foreground: 20 12% 25%;
+    --card-foreground: 260 15% 30%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 12% 25%;
+    --popover-foreground: 260 15% 30%;
 
-    --primary: 14 85% 65%;
+    /* Soft lavender primary */
+    --primary: 265 55% 75%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 180 65% 62%;
+    /* Mint secondary */
+    --secondary: 160 45% 70%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 30 40% 92%;
-    --muted-foreground: 20 8% 45%;
+    /* Soft neutral tones */
+    --muted: 270 25% 95%;
+    --muted-foreground: 260 10% 50%;
 
-    --accent: 40 95% 68%;
-    --accent-foreground: 20 12% 25%;
+    /* Peach accent */
+    --accent: 25 75% 80%;
+    --accent-foreground: 260 15% 30%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 70% 65%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 30% 88%;
-    --input: 30 30% 88%;
-    --ring: 14 85% 65%;
+    --border: 270 20% 90%;
+    --input: 270 20% 92%;
+    --ring: 265 55% 75%;
 
     --radius: 1rem;
 
-    /* Custom gradient colors */
-    --gradient-start: 14 85% 65%;
-    --gradient-mid: 180 65% 62%;
-    --gradient-end: 40 95% 68%;
+    /* Pastel gradient colors */
+    --gradient-start: 265 55% 85%;
+    --gradient-mid: 200 50% 85%;
+    --gradient-end: 25 70% 85%;
     
-    /* Soft shadows */
-    --shadow-soft: 0 4px 20px -2px hsl(14 85% 65% / 0.15);
-    --shadow-card: 0 10px 40px -10px hsl(14 85% 65% / 0.2);
+    /* Soft friendly shadows */
+    --shadow-soft: 0 2px 12px -2px hsl(265 40% 70% / 0.12);
+    --shadow-card: 0 4px 24px -4px hsl(265 40% 70% / 0.18);
+    --shadow-glow: 0 0 20px hsl(265 55% 75% / 0.15);
   }
 
   .dark {
-    --background: 20 15% 12%;
-    --foreground: 30 10% 90%;
+    /* Soft dark with warmth */
+    --background: 260 20% 15%;
+    --foreground: 270 15% 92%;
 
-    --card: 20 15% 15%;
-    --card-foreground: 30 10% 90%;
+    --card: 260 18% 18%;
+    --card-foreground: 270 15% 92%;
 
-    --popover: 20 15% 15%;
-    --popover-foreground: 30 10% 90%;
+    --popover: 260 18% 18%;
+    --popover-foreground: 270 15% 92%;
 
-    --primary: 14 85% 65%;
-    --primary-foreground: 0 0% 100%;
+    /* Lighter lavender for dark mode */
+    --primary: 265 50% 70%;
+    --primary-foreground: 260 20% 15%;
 
-    --secondary: 180 65% 55%;
-    --secondary-foreground: 0 0% 100%;
+    /* Softer mint for dark */
+    --secondary: 160 40% 60%;
+    --secondary-foreground: 260 20% 15%;
 
-    --muted: 20 10% 22%;
-    --muted-foreground: 30 5% 60%;
+    --muted: 260 15% 22%;
+    --muted-foreground: 270 10% 65%;
 
-    --accent: 40 95% 68%;
-    --accent-foreground: 20 15% 12%;
+    /* Warm peach for dark */
+    --accent: 25 65% 70%;
+    --accent-foreground: 260 20% 15%;
 
-    --destructive: 0 62% 45%;
+    --destructive: 0 65% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 20 10% 22%;
-    --input: 20 10% 22%;
-    --ring: 14 85% 65%;
+    --border: 260 15% 25%;
+    --input: 260 15% 22%;
+    --ring: 265 50% 70%;
     
-    --gradient-start: 14 85% 65%;
-    --gradient-mid: 180 65% 55%;
-    --gradient-end: 40 95% 68%;
+    --gradient-start: 265 45% 50%;
+    --gradient-mid: 200 40% 50%;
+    --gradient-end: 25 60% 55%;
     
-    --shadow-soft: 0 4px 20px -2px hsl(14 85% 65% / 0.25);
-    --shadow-card: 0 10px 40px -10px hsl(14 85% 65% / 0.3);
+    --shadow-soft: 0 2px 12px -2px hsl(265 40% 10% / 0.4);
+    --shadow-card: 0 4px 24px -4px hsl(265 40% 10% / 0.5);
+    --shadow-glow: 0 0 20px hsl(265 50% 40% / 0.25);
   }
 }
 
@@ -93,9 +104,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
+  /* Friendly YUNO animations */
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -118,12 +132,45 @@ All colors MUST be HSL.
     }
   }
   
+  @keyframes bounce-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.9) translateY(10px);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.02) translateY(-2px);
+    }
+    100% {
+      transform: scale(1) translateY(0);
+    }
+  }
+  
+  @keyframes sparkle {
+    0%, 100% {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+  }
+  
   .animate-fade-in {
     animation: fade-in 0.5s ease-out;
   }
   
   .animate-slide-in {
     animation: slide-in 0.4s ease-out;
+  }
+  
+  .animate-bounce-in {
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .animate-sparkle {
+    animation: sparkle 2s ease-in-out infinite;
   }
 }
 

@@ -61,10 +61,12 @@ export default {
       backgroundImage: {
         'gradient-warm': 'linear-gradient(135deg, hsl(var(--gradient-start)), hsl(var(--gradient-mid)), hsl(var(--gradient-end)))',
         'gradient-radial': 'radial-gradient(circle at top right, hsl(var(--gradient-start) / 0.15), transparent 70%)',
+        'gradient-soft': 'linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted) / 0.3))',
       },
       boxShadow: {
         'soft': 'var(--shadow-soft)',
         'card': 'var(--shadow-card)',
+        'glow': 'var(--shadow-glow)',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -88,10 +90,35 @@ export default {
             height: "0",
           },
         },
+        "bounce-in": {
+          "0%": {
+            opacity: "0",
+            transform: "scale(0.9) translateY(10px)",
+          },
+          "60%": {
+            opacity: "1",
+            transform: "scale(1.02) translateY(-2px)",
+          },
+          "100%": {
+            transform: "scale(1) translateY(0)",
+          },
+        },
+        "sparkle": {
+          "0%, 100%": {
+            opacity: "0.6",
+            transform: "scale(1)",
+          },
+          "50%": {
+            opacity: "1",
+            transform: "scale(1.05)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "bounce-in": "bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "sparkle": "sparkle 2s ease-in-out infinite",
       },
     },
   },
