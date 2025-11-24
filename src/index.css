@@ -28,7 +28,7 @@ All colors MUST be HSL.
 
     /* Soft neutral tones */
     --muted: 270 25% 95%;
-    --muted-foreground: 260 10% 50%;
+    --muted-foreground: 260 10% 46%;
 
     /* Peach accent */
     --accent: 25 75% 80%;
