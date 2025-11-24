@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type Mode = "emotional" | "study" | "support" | "productivity" | "casual";
 type Message = { role: "user" | "assistant"; content: string };
@@ -35,8 +37,10 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,7 +50,42 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
     scrollToBottom();
   }, [messages]);
 
+  // Initialize conversation
+  useEffect(() => {
+    const initConversation = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("conversations")
+          .insert({
+            user_id: user.id,
+            mode: mode,
+            title: `${modeTitles[mode]} - ${new Date().toLocaleDateString()}`,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        setConversationId(data.id);
+
+        // Save initial greeting
+        await supabase.from("messages").insert({
+          conversation_id: data.id,
+          role: "assistant",
+          content: modeGreetings[mode],
+        });
+      } catch (error) {
+        console.error("Error creating conversation:", error);
+      }
+    };
+
+    initConversation();
+  }, [mode, user]);
+
   const streamChat = async (userMessage: string) => {
+    if (!conversationId) return;
+
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
     
     try {
@@ -154,6 +193,15 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
           } catch {}
         }
       }
+
+      // Save assistant message to database
+      if (assistantContent) {
+        await supabase.from("messages").insert({
+          conversation_id: conversationId,
+          role: "assistant",
+          content: assistantContent,
+        });
+      }
     } catch (error) {
       console.error("Chat error:", error);
       toast({
@@ -167,12 +215,23 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !conversationId) return;
 
     const userMessage = input.trim();
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
+
+    // Save user message to database
+    try {
+      await supabase.from("messages").insert({
+        conversation_id: conversationId,
+        role: "user",
+        content: userMessage,
+      });
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
 
     await streamChat(userMessage);
     setIsLoading(false);
