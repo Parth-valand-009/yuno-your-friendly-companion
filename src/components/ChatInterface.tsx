@@ -186,7 +186,7 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-radial flex flex-col">
+    <main className="min-h-screen bg-gradient-radial flex flex-col">
       {/* Header */}
       <div className="bg-card border-b shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4 max-w-4xl">
@@ -263,6 +263,6 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 };

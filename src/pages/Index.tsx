@@ -57,7 +57,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-radial relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-radial relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-warm opacity-5 pointer-events-none" />
       
@@ -134,7 +134,7 @@ const Index = () => {
           </div>
         </Card>
       </div>
-    </div>
+    </main>
   );
 };
 
