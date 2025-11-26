@@ -78,11 +78,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, mode } = await req.json();
+    const { messages, mode, hasImage } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    console.log(`[YUNO] Processing request in ${mode} mode with ${messages.length} messages`);
+    console.log(`[YUNO] Processing request in ${mode} mode with ${messages.length} messages, hasImage: ${hasImage}`);
 
     // Add mode-specific context to system prompt
     let modeContext = "";
@@ -104,6 +104,34 @@ serve(async (req) => {
         break;
     }
 
+    // Format messages for multimodal support
+    const formattedMessages = messages.map((msg: any) => {
+      if (msg.image) {
+        // Message with image - use content array format
+        return {
+          role: msg.role,
+          content: [
+            {
+              type: "text",
+              text: msg.content
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: msg.image
+              }
+            }
+          ]
+        };
+      } else {
+        // Text-only message
+        return {
+          role: msg.role,
+          content: msg.content
+        };
+      }
+    });
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -114,7 +142,7 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: YUNO_SYSTEM_PROMPT + modeContext },
-          ...messages,
+          ...formattedMessages,
         ],
         stream: true,
       }),

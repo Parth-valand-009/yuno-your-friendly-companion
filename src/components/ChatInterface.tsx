@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Send, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Image as ImageIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -8,7 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 type Mode = "emotional" | "study" | "support" | "productivity" | "casual";
-type Message = { role: "user" | "assistant"; content: string };
+type Message = { 
+  role: "user" | "assistant"; 
+  content: string;
+  image?: string;
+};
 
 interface ChatInterfaceProps {
   mode: Mode;
@@ -38,7 +42,9 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -83,7 +89,39 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
     initConversation();
   }, [mode, user]);
 
-  const streamChat = async (userMessage: string) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 20MB)
+    if (file.size > 20 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 20MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSelectedImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const streamChat = async (userMessage: string, imageData?: string) => {
     if (!conversationId) return;
 
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
@@ -96,8 +134,9 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ 
-          messages: [...messages, { role: "user", content: userMessage }],
-          mode 
+          messages: [...messages, { role: "user", content: userMessage, image: imageData }],
+          mode,
+          hasImage: !!imageData
         }),
       });
 
@@ -215,11 +254,13 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading || !conversationId) return;
+    if ((!input.trim() && !selectedImage) || isLoading || !conversationId) return;
 
-    const userMessage = input.trim();
+    const userMessage = input.trim() || "What do you see in this image?";
+    const imageData = selectedImage;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+    setSelectedImage(null);
+    setMessages((prev) => [...prev, { role: "user", content: userMessage, image: imageData }]);
     setIsLoading(true);
 
     // Save user message to database
@@ -233,7 +274,7 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
       console.error("Error saving message:", error);
     }
 
-    await streamChat(userMessage);
+    await streamChat(userMessage, imageData);
     setIsLoading(false);
   };
 
@@ -274,6 +315,13 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
                     : "bg-card shadow-card"
                 }`}
               >
+                {message.image && (
+                  <img 
+                    src={message.image} 
+                    alt="Uploaded" 
+                    className="max-w-full h-auto rounded-lg mb-2 max-h-64 object-contain"
+                  />
+                )}
                 <p className="whitespace-pre-wrap break-words">{message.content}</p>
               </Card>
             </div>
@@ -295,18 +343,54 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
       {/* Input */}
       <div className="bg-card border-t shadow-lg sticky bottom-0">
         <div className="container mx-auto px-4 py-4 max-w-4xl">
+          {selectedImage && (
+            <div className="mb-2 relative inline-block">
+              <img 
+                src={selectedImage} 
+                alt="Selected" 
+                className="h-20 w-20 object-cover rounded-lg border-2 border-primary"
+              />
+              <Button
+                variant="destructive"
+                size="icon"
+                className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                onClick={() => setSelectedImage(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
           <div className="flex gap-2">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Type your message..."
-              className="min-h-[60px] max-h-[120px] resize-none"
-              disabled={isLoading}
-            />
+            <div className="flex gap-2 flex-1">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+                className="shrink-0 h-[60px] w-[60px] rounded-xl"
+                title="Upload image"
+              >
+                <ImageIcon className="w-5 h-5" />
+              </Button>
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder={selectedImage ? "Describe what you want to know about the image..." : "Type your message..."}
+                className="min-h-[60px] max-h-[120px] resize-none"
+                disabled={isLoading}
+              />
+            </div>
             <Button
               onClick={handleSend}
-              disabled={!input.trim() || isLoading}
+              disabled={(!input.trim() && !selectedImage) || isLoading}
               size="icon"
               className="shrink-0 h-[60px] w-[60px] rounded-xl bg-gradient-warm hover:opacity-90 transition-opacity shadow-soft"
             >
@@ -318,7 +402,7 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
-            Press Enter to send, Shift+Enter for new line
+            {selectedImage ? "Send image with optional message" : "Press Enter to send, Shift+Enter for new line"}
           </p>
         </div>
       </div>
