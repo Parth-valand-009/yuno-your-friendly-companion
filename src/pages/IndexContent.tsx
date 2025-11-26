@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChatInterface } from "@/components/ChatInterface";
-import { Heart, BookOpen, HelpCircle, Target, MessageCircle, LogOut } from "lucide-react";
+import { Heart, BookOpen, HelpCircle, Target, MessageCircle, LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { ConversationSidebar } from "@/components/ConversationSidebar";
 
 type Mode = "emotional" | "study" | "support" | "productivity" | "casual";
 
@@ -43,6 +45,7 @@ const modes = [
 
 const IndexContent = () => {
   const [selectedMode, setSelectedMode] = useState<Mode | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const { toast } = useToast();
 
@@ -54,8 +57,40 @@ const IndexContent = () => {
     });
   };
 
+  const handleSelectConversation = (conversationId: string, mode: string) => {
+    setSelectedConversationId(conversationId);
+    setSelectedMode(mode as Mode);
+  };
+
+  const handleNewChat = () => {
+    setSelectedMode(null);
+    setSelectedConversationId(null);
+  };
+
+  const handleBack = () => {
+    setSelectedMode(null);
+    setSelectedConversationId(null);
+  };
+
   if (selectedMode) {
-    return <ChatInterface mode={selectedMode} onBack={() => setSelectedMode(null)} />;
+    return (
+      <SidebarProvider defaultOpen={false}>
+        <div className="flex min-h-screen w-full">
+          <ConversationSidebar
+            onSelectConversation={handleSelectConversation}
+            onNewChat={handleNewChat}
+            currentConversationId={selectedConversationId}
+          />
+          <div className="flex-1 flex flex-col">
+            <ChatInterface
+              mode={selectedMode}
+              onBack={handleBack}
+              existingConversationId={selectedConversationId}
+            />
+          </div>
+        </div>
+      </SidebarProvider>
+    );
   }
 
   return (

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Send, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Image as ImageIcon, X, Menu } from "lucide-react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -17,6 +18,7 @@ type Message = {
 interface ChatInterfaceProps {
   mode: Mode;
   onBack: () => void;
+  existingConversationId?: string | null;
 }
 
 const modeTitles = {
@@ -35,7 +37,7 @@ const modeGreetings = {
   casual: "Hey there! How's your day going? 😊",
 };
 
-export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
+export const ChatInterface = ({ mode, onBack, existingConversationId }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: modeGreetings[mode] },
   ]);
@@ -56,38 +58,60 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
     scrollToBottom();
   }, [messages]);
 
-  // Initialize conversation
+  // Initialize or load conversation
   useEffect(() => {
     const initConversation = async () => {
       if (!user) return;
 
       try {
-        const { data, error } = await supabase
-          .from("conversations")
-          .insert({
-            user_id: user.id,
-            mode: mode,
-            title: `${modeTitles[mode]} - ${new Date().toLocaleDateString()}`,
-          })
-          .select()
-          .single();
+        // If we have an existing conversation ID, load it
+        if (existingConversationId) {
+          setConversationId(existingConversationId);
+          
+          // Load existing messages
+          const { data: messagesData, error: messagesError } = await supabase
+            .from("messages")
+            .select("*")
+            .eq("conversation_id", existingConversationId)
+            .order("created_at", { ascending: true });
 
-        if (error) throw error;
-        setConversationId(data.id);
+          if (messagesError) throw messagesError;
+          
+          if (messagesData && messagesData.length > 0) {
+            setMessages(messagesData.map(msg => ({
+              role: msg.role as "user" | "assistant",
+              content: msg.content,
+            })));
+          }
+        } else {
+          // Create new conversation
+          const { data, error } = await supabase
+            .from("conversations")
+            .insert({
+              user_id: user.id,
+              mode: mode,
+              title: `${modeTitles[mode]} - ${new Date().toLocaleDateString()}`,
+            })
+            .select()
+            .single();
 
-        // Save initial greeting
-        await supabase.from("messages").insert({
-          conversation_id: data.id,
-          role: "assistant",
-          content: modeGreetings[mode],
-        });
+          if (error) throw error;
+          setConversationId(data.id);
+
+          // Save initial greeting
+          await supabase.from("messages").insert({
+            conversation_id: data.id,
+            role: "assistant",
+            content: modeGreetings[mode],
+          });
+        }
       } catch (error) {
-        console.error("Error creating conversation:", error);
+        console.error("Error initializing conversation:", error);
       }
     };
 
     initConversation();
-  }, [mode, user]);
+  }, [mode, user, existingConversationId]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -290,6 +314,7 @@ export const ChatInterface = ({ mode, onBack }: ChatInterfaceProps) => {
       {/* Header */}
       <div className="bg-card border-b shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4 max-w-4xl">
+          <SidebarTrigger className="shrink-0" />
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
